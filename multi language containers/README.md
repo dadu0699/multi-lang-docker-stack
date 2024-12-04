@@ -141,6 +141,5 @@ En esta guía, aprendiste cómo:
 - Construir una imagen Docker a partir de un `Dockerfile`.
 - Ejecutar un contenedor Docker a partir de una imagen.
 - Subir una imagen Docker a Docker Hub.
-- Correr la aplicación Python FastAPI dentro de un contenedor Docker.
 
 Con este conocimiento, podrás contenerizar aplicaciones en múltiples lenguajes y desplegarlas de manera consistente en diferentes entornos.
