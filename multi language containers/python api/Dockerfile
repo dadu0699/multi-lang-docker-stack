@@ -3,10 +3,9 @@ FROM python:3.13-alpine
 # Set the working directory
 WORKDIR /code
 
-
 # Copy the requirements file and install the Python dependencies
 COPY ./requirements.txt /code/requirements.txt
-RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
+RUN pip install /code/requirements.txt
 
 # Copy the application into the container
 COPY ./app /code/app
