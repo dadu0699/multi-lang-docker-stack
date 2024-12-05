@@ -1,63 +1,75 @@
-# Corriendo el proyecto
+# Python API con FastAPI
 
-## Paso 1: Construir la Aplicación Python
+Este proyecto proporciona una API construida con FastAPI y empaquetada en un contenedor Docker. A continuación, se detalla cómo construir y ejecutar la aplicación utilizando Docker.
+
+## Instrucciones para correr el proyecto con Docker
+
+### Paso 1: Construir la imagen de Docker
+
+Primero, construye la imagen Docker de la aplicación Python ejecutando el siguiente comando:
 
 ```bash
 docker build -t my-python-app .
 ```
 
-## Paso 2: Correr la Aplicación Python
+Este comando creará una imagen de Docker a partir del `Dockerfile` en el directorio actual y la etiquetará como `my-python-app`.
 
-Una vez que la imagen esté construida, puedes ejecutar el contenedor con el siguiente comando:
+### Paso 2: Ejecutar la aplicación en Docker
+
+Una vez que la imagen se haya construido correctamente, puedes ejecutar el contenedor con el siguiente comando:
 
 ```bash
 docker run --name fastapi-container -p 8000:80 my-python-app
 ```
 
-Esto iniciará la aplicación FastAPI dentro del contenedor y mapeará el puerto `80` del contenedor al puerto `8000` en tu máquina local. Podrás acceder a la aplicación visitando `http://localhost:8000`.
+Este comando hará lo siguiente:
+
+- Ejecutará el contenedor con el nombre `fastapi-container`.
+- Mapeo de puertos: El puerto `80` dentro del contenedor se expondrá en el puerto `8000` de tu máquina local.
+- La aplicación FastAPI será accesible a través de `http://localhost:8000` en tu navegador.
 
 ## Explicación del Dockerfile
 
-Vamos a repasar el `Dockerfile` de la aplicación Python. A continuación se explica cada línea:
+A continuación, se explica línea por línea el contenido del `Dockerfile` de la aplicación:
 
 ```Dockerfile
 FROM python:3.13-alpine
 ```
 
-- Esta línea especifica la imagen base que usará el contenedor. Usamos la imagen `python:3.13-alpine`, que es una versión ligera de Python 3.13 basada en Alpine Linux.
+- **Descripción**: Se utiliza la imagen base `python:3.13-alpine`, que es una versión optimizada y ligera de Python 3.13 basada en Alpine Linux.
 
 ```Dockerfile
 WORKDIR /code
 ```
 
-- Establece el directorio de trabajo dentro del contenedor como `/code`. Todas las instrucciones siguientes se ejecutarán dentro de este directorio.
+- **Descripción**: Establece el directorio de trabajo dentro del contenedor a `/code`. A partir de este punto, todas las operaciones se realizarán dentro de este directorio.
 
 ```Dockerfile
 COPY ./requirements.txt /code/requirements.txt
 ```
 
-- Copia el archivo `requirements.txt` desde tu máquina local (el directorio actual) al directorio `/code/` dentro del contenedor.
+- **Descripción**: Copia el archivo `requirements.txt` desde el directorio local al contenedor, ubicándolo en `/code/requirements.txt`.
 
 ```Dockerfile
 RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
 ```
 
-- Ejecuta el comando `pip install` para instalar las dependencias listadas en `requirements.txt` dentro del contenedor.
+- **Descripción**: Instala las dependencias de Python listadas en `requirements.txt` dentro del contenedor. La opción `--no-cache-dir` evita almacenar caché de paquetes innecesarios, manteniendo la imagen más ligera.
 
 ```Dockerfile
 COPY ./app /code/app
 ```
 
-- Copia el código fuente desde el directorio `app` en tu máquina local al directorio `/code/app` dentro del contenedor.
+- **Descripción**: Copia todo el código fuente de la carpeta `app` desde tu máquina local al contenedor, específicamente en el directorio `/code/app`.
 
 ```Dockerfile
 EXPOSE 80
 ```
 
-- Indica a Docker que el contenedor escuchará en el puerto `80`. Esto es útil para cuando se ejecuta el contenedor y se expone el puerto.
+- **Descripción**: Informa a Docker que el contenedor escuchará en el puerto `80`. Esto es importante para la exposición del servicio web.
 
 ```Dockerfile
 CMD ["fastapi", "run", "app/main.py", "--port", "80"]
 ```
 
-- La instrucción `CMD` especifica el comando predeterminado que se ejecutará cuando el contenedor inicie.
+- **Descripción**: Especifica el comando por defecto que se ejecutará cuando el contenedor inicie. En este caso, ejecuta FastAPI y lanza la aplicación en el puerto `80`.
