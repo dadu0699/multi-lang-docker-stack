@@ -3,9 +3,11 @@ FROM node:22-alpine
 # Set the working directory
 WORKDIR /api
 
-# Copy the package.json and package-lock.json files, and install the dependencies
-COPY package*.json /api
-RUN npm install
+# Copy dependency definitions
+COPY package.json package-lock.json /api/
+
+# Install dependencies
+RUN npm ci --omit=dev
 
 # Copy the application into the container
 COPY . /api
