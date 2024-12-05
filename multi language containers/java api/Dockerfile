@@ -1,5 +1,5 @@
 # First stage: Build the application
-FROM maven:3.9.9-eclipse-temurin-21-alpine as build
+FROM maven:3.9.9-eclipse-temurin-21-alpine AS build
 # Set working directory
 WORKDIR /app
 # Copy pom.xml and download dependencies (this helps avoid downloading dependencies if they haven’t changed)
