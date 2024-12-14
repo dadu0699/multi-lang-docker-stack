@@ -1,4 +1,4 @@
-# Python API con FastAPI
+# Python API con Docker
 
 Este proyecto proporciona una API construida con FastAPI y empaquetada en un contenedor Docker. A continuación, se detalla cómo construir y ejecutar la aplicación utilizando Docker.
 
