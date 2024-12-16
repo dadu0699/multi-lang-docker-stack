@@ -4,11 +4,11 @@ FROM python:3.13-alpine
 WORKDIR /code
 
 # Copy the requirements file and install the Python dependencies
-COPY ./requirements.txt /code/requirements.txt
-RUN pip install /code/requirements.txt
+COPY ./requirements.txt requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the application into the container
-COPY ./app /code/app
+COPY ./app ./app
 
 # Expose the port
 EXPOSE 80
