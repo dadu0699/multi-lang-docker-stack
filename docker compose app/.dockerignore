@@ -1,0 +1,5 @@
+*.md
+.git
+.gitignore
+__pycache__/
+.venv/
