@@ -45,19 +45,19 @@ WORKDIR /code
 - **Descripción**: Establece el directorio de trabajo dentro del contenedor a `/code`. A partir de este punto, todas las operaciones se realizarán dentro de este directorio.
 
 ```Dockerfile
-COPY ./requirements.txt /code/requirements.txt
+COPY ./requirements.txt requirements.txt
 ```
 
 - **Descripción**: Copia el archivo `requirements.txt` desde el directorio local al contenedor, ubicándolo en `/code/requirements.txt`.
 
 ```Dockerfile
-RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 ```
 
 - **Descripción**: Instala las dependencias de Python listadas en `requirements.txt` dentro del contenedor. La opción `--no-cache-dir` evita almacenar caché de paquetes innecesarios, manteniendo la imagen más ligera.
 
 ```Dockerfile
-COPY ./app /code/app
+COPY ./app ./app
 ```
 
 - **Descripción**: Copia todo el código fuente de la carpeta `app` desde tu máquina local al contenedor, específicamente en el directorio `/code/app`.
