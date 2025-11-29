@@ -19,11 +19,11 @@ Docker Compose es una herramienta para definir y ejecutar aplicaciones Docker mu
 Para definir servicios en Docker Compose, necesitas crear un archivo `docker-compose.yml` en el directorio raíz de tu proyecto. Aquí hay un ejemplo básico:
 
 ```yaml
-version: '3.8'
-
+name: web_app_example
 services:
   web:
     image: nginx:latest
+    container_name: web_server
     ports:
       - "8080:80"
   redis:
@@ -88,8 +88,7 @@ El archivo `docker-compose.yml` es donde defines los servicios que componen tu a
 Ejemplo de un archivo `docker-compose.yml` con estas secciones:
 
 ```yaml
-version: '3.8'
-
+name: tutorial
 services:
   redis:
     image: redis:7.4-alpine
