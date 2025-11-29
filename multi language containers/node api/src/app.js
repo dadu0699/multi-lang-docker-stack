@@ -24,7 +24,7 @@ app.get('/favicon.ico', (_req, res) => res.status(204));
 
 // Routes
 app.get('/', (_req, res) =>
-  res.json({ message: 'Welcome to the Node.js API!' })
+  res.status(200).json({ message: 'Welcome to the Node.js API!' })
 );
 
 // Port assignment
