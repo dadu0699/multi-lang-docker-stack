@@ -29,7 +29,7 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
     -o /out/app ${APP_PATH}
 
 # Stage 2: Runtime image
-FROM gcr.io/distroless/static-debian12:nonroot
+FROM gcr.io/distroless/static-debian13:nonroot
 
 # Application working directory
 WORKDIR /srv
