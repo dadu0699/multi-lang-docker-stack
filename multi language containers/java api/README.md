@@ -88,8 +88,6 @@ RUN mvn -B clean package -DskipTests
   - `package`: compila el código y empaqueta la aplicación (normalmente en un `.jar` ejecutable).
   - `-DskipTests`: omite la ejecución de tests durante el build para hacerlo más rápido (útil para entornos de ejemplo o desarrollo).
 
----
-
 ### Segunda etapa: imagen de runtime (ejecución)
 
 ```Dockerfile
