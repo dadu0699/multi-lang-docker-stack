@@ -1,39 +1,51 @@
-# Build phase (compiling the Go application)
-FROM golang:1.23.4-alpine AS build
+# Stage 1: Build the app  
+FROM golang:1.25-alpine AS builder
 
-# Install build dependencies
-RUN apk add --no-cache build-base git
+# Install minimal build dependencies
+RUN apk add --no-cache ca-certificates git
 
+# Set working directory inside the container
 WORKDIR /app
 
-# Copy only dependency files first to leverage Docker cache
+# Copy Go modules definition to leverage Docker layer cache
 COPY go.mod go.sum ./
 
-# Download Go module dependencies
-RUN go mod tidy && go mod download
+# Download Go module dependencies (cached between builds)
+RUN --mount=type=cache,target=/go/pkg/mod \
+    go mod download
 
-# Copy the rest of the application code
+# Copy the rest of the source code
 COPY . .
 
-# Build the Go application for Linux (amd64 architecture)
-RUN GOOS=linux GOARCH=amd64 go build -o main cmd/server/main.go
+# Path to the main package (can be overridden at build time)
+# Example:
+#   docker build --build-arg APP_PATH=./cmd/signsvc -t myapp .
+ARG APP_PATH=./cmd/server
 
-# Final image (smaller, only runtime dependencies)
-FROM alpine:3.21
+# Build a small, statically linked binary
+RUN --mount=type=cache,target=/root/.cache/go-build \
+    CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
+    go build -trimpath -ldflags="-s -w" \
+    -o /out/app ${APP_PATH}
 
-# Install only the necessary runtime dependencies (ca-certificates for SSL)
-RUN apk add --no-cache ca-certificates
+# Stage 2: Runtime image
+FROM gcr.io/distroless/static-debian12:nonroot
 
-WORKDIR /app
+# Application working directory
+WORKDIR /srv
 
-# Copy the built binary from the build phase
-COPY --from=build /app/main .
+# Copy the compiled binary from the builder stage
+COPY --from=builder /out/app /srv/app
 
-# Set Gin mode to 'release' for production
+# Environment configuration (read by your Go app)
 ENV GIN_MODE=release
+ENV PORT=8080
 
-# Expose the port the application will run on
+# Document the port the service listens on
 EXPOSE 8080
 
-# Run the built application binary
-CMD ["./main"]
+# Run as non-root user for better security
+USER nonroot:nonroot
+
+# Use ENTRYPOINT so additional args can be passed at `docker run`
+ENTRYPOINT ["/srv/app"]

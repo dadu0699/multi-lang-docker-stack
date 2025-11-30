@@ -30,95 +30,115 @@ Este comando hará lo siguiente:
 
 ## Explicación del Dockerfile
 
-Este `Dockerfile` utiliza una **estrategia de construcción en dos etapas**, lo que significa que se compila la aplicación en una imagen y luego se crea una imagen más pequeña y optimizada para la ejecución de la aplicación.
+Este `Dockerfile` utiliza una **estrategia multi-stage moderna**, lo que permite compilar la aplicación en una imagen base con Go y luego copiar solo el binario final a una imagen mínima optimizada para producción.
 
-### Primera etapa: Construcción de la aplicación
-
-```Dockerfile
-FROM golang:1.23.4-alpine AS build
-```
-
-- **Descripción**: Utiliza la imagen `golang:1.23.4-alpine` como base para compilar la aplicación Go. Esta imagen contiene Go y está basada en Alpine Linux, lo que la hace ligera y adecuada para el entorno de desarrollo.
+### Primera etapa: Build del binario
 
 ```Dockerfile
-RUN apk add --no-cache build-base git
+FROM golang:1.23-alpine AS builder
 ```
 
-- **Descripción**: Instala las dependencias necesarias para la compilación, como `build-base` (para herramientas de construcción en Alpine) y `git` (para descargar dependencias de Go que podrían necesitarse desde repositorios).
+- **Descripción**: Usa la imagen oficial `golang:1.23-alpine` para compilar la aplicación. Está basada en Alpine, lo que la hace ligera y adecuada para tiempos de build rápidos.
+
+```Dockerfile
+RUN apk add --no-cache ca-certificates git
+```
+
+- **Descripción**: Instala dependencias mínimas necesarias para compilar el proyecto, incluyendo `git` para resolver módulos Go y `ca-certificates` para realizar descargas seguras.
 
 ```Dockerfile
 WORKDIR /app
 ```
 
-- **Descripción**: Establece el directorio de trabajo dentro del contenedor a `/app`. A partir de este punto, todas las operaciones siguientes se realizarán dentro de este directorio.
+- **Descripción**: Define el directorio de trabajo para todas las operaciones siguientes dentro del contenedor.
 
 ```Dockerfile
 COPY go.mod go.sum ./
-RUN go mod tidy && go mod download
 ```
 
-- **Descripción**: Copia los archivos `go.mod` y `go.sum`, que definen las dependencias de la aplicación, y luego ejecuta los comandos `go mod tidy` y `go mod download` para descargar y asegurar que las dependencias estén disponibles.
+- **Descripción**: Copia los archivos que definen las dependencias de Go. Esto permite que Docker aproveche el caching del módulo Go en builds posteriores.
+
+```Dockerfile
+RUN --mount=type=cache,target=/go/pkg/mod \
+    go mod download
+```
+
+- **Descripción**: Descarga todas las dependencias usando un caché persistente, acelerando builds repetidas.
 
 ```Dockerfile
 COPY . .
 ```
 
-- **Descripción**: Copia todo el código fuente de la aplicación al contenedor en el directorio `/app`.
+- **Descripción**: Copia el resto del código fuente del proyecto dentro del contenedor.
 
 ```Dockerfile
-RUN GOOS=linux GOARCH=amd64 go build -o main cmd/server/main.go
+ARG APP_PATH=./cmd/server
 ```
 
-- **Descripción**: Compila la aplicación Go para la plataforma Linux y la arquitectura `amd64`, generando un binario llamado `main` en el directorio de trabajo.
-
-### Segunda etapa: Creación de la imagen para ejecución en tiempo de ejecución
+- **Descripción**: Define una variable de build para controlar el camino del archivo principal (`main.go`) sin modificar el Dockerfile.
 
 ```Dockerfile
-FROM alpine:3.21
+RUN --mount=type=cache,target=/root/.cache/go-build \
+    CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
+    go build -trimpath -ldflags="-s -w" -o /out/app ${APP_PATH}
 ```
 
-- **Descripción**: Utiliza una imagen base de Alpine Linux para la segunda etapa. Esta imagen es más ligera y adecuada para ejecutar aplicaciones en producción.
+- **Descripción**: Compila un binario estático optimizado para producción (`-s -w` reduce tamaño). Usa Go Build cache para builds más rápidos.
+
+### Segunda etapa: Imagen final de producción
 
 ```Dockerfile
-RUN apk add --no-cache ca-certificates
+FROM gcr.io/distroless/static-debian12:nonroot
 ```
 
-- **Descripción**: Instala solo los certificados de autoridad necesarios para la ejecución de la aplicación, lo cual es esencial si la aplicación necesita hacer peticiones HTTPS.
+- **Descripción**: Usa una imagen **Distroless** ultra mínima, sin shell ni paquetes innecesarios, ideal para producción y alta seguridad. La variante `nonroot` evita ejecutar como root.
 
 ```Dockerfile
-WORKDIR /app
+WORKDIR /srv
 ```
 
-- **Descripción**: Establece el directorio de trabajo dentro del contenedor a `/app`, donde se ejecutará el binario de la aplicación.
+- **Descripción**: Define el directorio desde donde se ejecutará el binario.
 
 ```Dockerfile
-COPY --from=build /app/main .
+COPY --from=builder /out/app /srv/app
 ```
 
-- **Descripción**: Copia el binario compilado `main` desde la fase de construcción al contenedor de ejecución.
+- **Descripción**: Copia únicamente el binario final compilado desde la fase anterior. Esto mantiene la imagen extremadamente ligera.
 
 ```Dockerfile
 ENV GIN_MODE=release
 ```
 
-- **Descripción**: Establece la variable de entorno `GIN_MODE` en `release`, lo que configura a Gin para que ejecute la aplicación en modo de producción.
+- **Descripción**: Configura Gin para ejecutarse en modo producción.
+
+```Dockerfile
+ENV PORT=8080
+```
+
+- **Descripción**: Define el puerto por defecto que utilizará la aplicación.
 
 ```Dockerfile
 EXPOSE 8080
 ```
 
-- **Descripción**: Expone el puerto `8080` en el contenedor. Esto permite que la API sea accesible a través de este puerto desde el exterior del contenedor.
+- **Descripción**: Documenta que el contenedor expone el puerto `8080`.
 
 ```Dockerfile
-CMD ["./main"]
+USER nonroot:nonroot
 ```
 
-- **Descripción**: Especifica el comando que se ejecutará cuando el contenedor inicie. En este caso, ejecuta el binario `main` que fue copiado desde la fase de construcción.
+- **Descripción**: Ejecuta la aplicación con un usuario no root, fortaleciendo la seguridad.
+
+```Dockerfile
+ENTRYPOINT ["/srv/app"]
+```
+
+- **Descripción**: Define el binario como punto de entrada del contenedor, permitiendo pasar argumentos adicionales con `docker run`.
 
 ## ¿Por qué usar construcción en dos etapas?
 
-La construcción en dos etapas ofrece los siguientes beneficios:
+La construcción multi-stage ofrece importantes ventajas:
 
-- **Optimización de la imagen**: La imagen final será más pequeña porque no incluirá herramientas de construcción como el compilador de Go ni los archivos temporales generados durante el proceso de compilación.
-- **Mejor seguridad**: Minimiza la superficie de ataque, ya que el contenedor de producción solo contiene el binario de la aplicación y las dependencias necesarias para ejecutarlo.
-- **Desempeño mejorado**: La imagen de producción es más ligera, lo que mejora el tiempo de inicio y reduce el consumo de recursos.
+- **Optimización de la imagen**: La imagen final es extremadamente ligera y no incluye herramientas de compilación.
+- **Mejor seguridad**: Se reduce la superficie de ataque al no incluir librerías ni paquetes innecesarios.
+- **Mejor rendimiento**: Menor tamaño implica despliegues más rápidos, menor uso de almacenamiento y un bootstrap más eficiente.
