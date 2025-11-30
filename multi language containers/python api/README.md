@@ -33,10 +33,10 @@ Este comando hará lo siguiente:
 A continuación, se explica línea por línea el contenido del `Dockerfile` de la aplicación:
 
 ```Dockerfile
-FROM python:3.13-alpine
+FROM python:3.13-slim
 ```
 
-- **Descripción**: Se utiliza la imagen base `python:3.13-alpine`, que es una versión optimizada y ligera de Python 3.13 basada en Alpine Linux.
+- **Descripción**: Se utiliza la imagen base `python:3.13-slim`, que es una versión optimizada y ligera de Python 3.13 basada en Debian Slim.
 
 ```Dockerfile
 WORKDIR /code
@@ -57,10 +57,21 @@ RUN pip install --no-cache-dir -r requirements.txt
 - **Descripción**: Instala las dependencias de Python listadas en `requirements.txt` dentro del contenedor. La opción `--no-cache-dir` evita almacenar caché de paquetes innecesarios, manteniendo la imagen más ligera.
 
 ```Dockerfile
-COPY ./app ./app
+COPY . .
 ```
 
-- **Descripción**: Copia todo el código fuente de la carpeta `app` desde tu máquina local al contenedor, específicamente en el directorio `/code/app`.
+- **Descripción**: Copia todo el código fuente de la aplicación desde tu máquina local al contenedor, específicamente al directorio `/code`.
+
+```Dockerfile
+RUN useradd -m myuser
+RUN chown -R myuser:myuser .
+USER myuser
+```
+
+- **Descripción**:
+  - Crea un usuario no root llamado `myuser` para mejorar la seguridad del contenedor.
+  - Cambia la propiedad de todos los archivos en el directorio `/api` al usuario `myuser`.
+  - Cambia el usuario actual a `myuser`, asegurando que la aplicación se ejecute con privilegios limitados.
 
 ```Dockerfile
 EXPOSE 80
