@@ -1,5 +1,5 @@
 # First stage: Build the application
-FROM maven:3.9-eclipse-temurin-24-alpine AS build
+FROM maven:3.9-eclipse-temurin-25-alpine AS build
 
 # Set working directory
 WORKDIR /app
@@ -19,7 +19,7 @@ RUN mvn -B clean package -DskipTests
 
 
 # Second stage: Create Image for runtime
-FROM eclipse-temurin:24-jre-alpine
+FROM eclipse-temurin:25-jre-alpine
 
 # Create a non-root user for security
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup

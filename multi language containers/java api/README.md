@@ -35,11 +35,11 @@ Este `Dockerfile` utiliza una **estrategia de construcción en dos etapas**, lo 
 ### Primera etapa: build de la aplicación
 
 ```Dockerfile
-FROM maven:3.9-eclipse-temurin-24-alpine AS build
+FROM maven:3.9-eclipse-temurin-25-alpine AS build
 ```
 
-- **Descripción**: Usa la imagen base `maven:3.9-eclipse-temurin-24-alpine` para compilar la aplicación.  
-  Esta imagen ya trae instalado **Maven** y **Eclipse Temurin 24 (JDK)** sobre **Alpine Linux**, lo que la hace ligera y adecuada para builds.  
+- **Descripción**: Usa la imagen base `maven:3.9-eclipse-temurin-25-alpine` para compilar la aplicación.  
+  Esta imagen ya trae instalado **Maven** y **Eclipse Temurin 25 (JDK)** sobre **Alpine Linux**, lo que la hace ligera y adecuada para builds.  
   El alias `AS build` nombra esta etapa como `build` para poder referenciarla después en la segunda etapa.
 
 ```Dockerfile
@@ -91,10 +91,10 @@ RUN mvn -B clean package -DskipTests
 ### Segunda etapa: imagen de runtime (ejecución)
 
 ```Dockerfile
-FROM eclipse-temurin:24-jre-alpine
+FROM eclipse-temurin:25-jre-alpine
 ```
 
-- **Descripción**: Define la imagen base de runtime usando `eclipse-temurin:24-jre-alpine`, que contiene solo el **JRE 24** sobre Alpine.  
+- **Descripción**: Define la imagen base de runtime usando `eclipse-temurin:25-jre-alpine`, que contiene solo el **JRE 25** sobre Alpine.  
   Es mucho más ligera que la imagen con Maven y JDK, reduciendo el tamaño de la imagen final.
 
 ```Dockerfile
