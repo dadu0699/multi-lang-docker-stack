@@ -9,22 +9,22 @@ Este proyecto utiliza Go y el framework Gin para construir una API. La aplicaci�
 Primero, construye la imagen Docker de la aplicación Go ejecutando el siguiente comando:
 
 ```bash
-docker build -t my-go-api .
+docker build -t my-go-app .
 ```
 
-Este comando creará una imagen de Docker a partir del `Dockerfile` en el directorio actual y la etiquetará como `my-go-api`.
+Este comando creará una imagen de Docker a partir del `Dockerfile` en el directorio actual y la etiquetará como `my-go-app`.
 
 ### Paso 2: Ejecutar la aplicación en Docker
 
 Una vez que la imagen se haya construido correctamente, puedes ejecutar el contenedor con el siguiente comando:
 
 ```bash
-docker run --name go-api-container -p 8080:8080 my-go-api
+docker run --name go-container -p 8080:8080 my-go-app
 ```
 
 Este comando hará lo siguiente:
 
-- Ejecutará el contenedor con el nombre `go-api-container`.
+- Ejecutará el contenedor con el nombre `go-container`.
 - Mapeo de puertos: El puerto `8080` dentro del contenedor se expondrá en el puerto `8080` de tu máquina local.
 - La API Go será accesible a través de `http://localhost:8080` en tu navegador.
 
