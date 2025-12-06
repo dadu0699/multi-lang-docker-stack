@@ -1,26 +1,38 @@
 FROM python:3.13-slim
 
-# Set the working directory
-WORKDIR /code
+# Recommended Python environment configuration for containers:
+# - Do not write .pyc files
+# - Do not buffer stdout/stderr (logs appear immediately)
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
 
-# Copy the requirements file and install the Python dependencies
-COPY ./requirements.txt requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt
+# Set the working directory inside the container.
+WORKDIR /api
 
-# Copy the application into the container
+# Create a non-root user and group for running the application.
+# Using a non-root user improves container security.
+RUN groupadd -r userApp && useradd -r -g userApp userApp
+
+# Copy dependency file first to leverage Docker layer caching.
+COPY ./requirements.txt .
+
+# Upgrade pip and install Python dependencies.
+# --no-cache-dir avoids caching packages and keeps the image smaller.
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
+
+# Copy the rest of the application source code into the image.
 COPY . .
 
-# Create a non-root user for security
-RUN useradd -m myuser
+# Change ownership of the application directory to the non-root user.
+RUN chown -R userApp:userApp /api
 
-# Change ownership of the files to the non-root user
-RUN chown -R myuser:myuser .
+# Switch to the non-root user for running the process.
+USER userApp
 
-# Switch to the non-root user to run the application
-USER myuser
-
-# Expose the port
+# Expose the port where FastAPI will listen inside the container.
 EXPOSE 80
 
-# Command to run the application
-CMD ["fastapi", "run", "app/main.py", "--port", "80"]
+# Default command to start the FastAPI application.
+# The app listens on 0.0.0.0 so it is reachable from outside the container.
+CMD ["fastapi", "run", "app/main.py", "--host", "0.0.0.0", "--port", "80"]
