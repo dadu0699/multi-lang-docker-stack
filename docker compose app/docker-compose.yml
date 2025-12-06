@@ -1,27 +1,35 @@
 name: tutorial
+
 services:
   redis:
     image: redis:7.4-alpine
-    container_name: 'redis'
-    ports:
-      - 6379:6379
+    container_name: redis
+    command:
+      [
+        'redis-server',
+        '--appendonly',
+        'yes',
+        '--requirepass',
+        '${REDIS_PASSWORD}',
+      ]
     environment:
       - REDIS_PORT=6379
-      # - REDIS_USER=guest
-      # - REDIS_PASSWORD=guest
     volumes:
       - vol:/data
+
   api:
     build: .
-    container_name: 'api'
-    ports:
-      - '80:80'
-    restart: on-failure
+    container_name: api
+    depends_on:
+      - redis
     environment:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
-    depends_on:
-      - redis
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+    ports:
+      - '80:80'
+    restart: on-failure
+
 volumes:
   vol:
     driver: local

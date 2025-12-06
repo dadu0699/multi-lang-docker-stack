@@ -1,5 +1,27 @@
+# Ignore documentation and metadata files
 *.md
 .git
 .gitignore
+
+# Ignore Python cache and compiled files
 __pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.log
+*.sqlite3
+.pytest_cache/
+.mypy_cache/
+
+# Ignore virtual environments
 .venv/
+env/
+venv/
+
+# Ignore IDE/editor configuration directories
+.vscode/
+.idea/
+
+# Docker-related local overrides and environment files
+docker-compose.override.yml
+.env
